@@ -52,7 +52,7 @@ module leg(toPrint = false) {
     module nutHalf() {
         //nut / outer
         difference() {
-            cylinder(r = 7 + threadGap, h = nutLength / 2);
+            cylinder(r = 7 + threadGap, h = nutLength / 2, $fn = 12);
             //translate and add length to ensure a 2-manifold result
             translate([0, 0, -1]) metric_thread(12 + threadGap, 1.5, (nutLength / 2) + 2, internal=true);
         }
