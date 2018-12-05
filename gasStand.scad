@@ -2,18 +2,10 @@ use <MCAD/fasteners/threads.scad>
 
 /*
 
-  |-100mm--|
-
-
 | ========== |
 |----------  |
 |  ----------|
 | ========== |
-
-TODO:
-
-* Add texture to nut outside
-* Add a catch to keep from unwinding completely
 
 */
 
@@ -31,11 +23,23 @@ legThickness = 13;
 
 //hub
 hubThickness = 3;
+l1 = 21;
+l2 = 28;
+legWidth = m3ClearanceHole+4;
 
-module leg(toPrint = false) {
+module legAdjustment(toPrint = false, bottomTaper = false) {
     module inner() {
-        //cap
-        translate([0, 0, -capLength]) cylinder(r = 7 + threadGap, h = capLength);
+        if (withTaper) {
+            //cap with taper
+            hull() {
+                //this has to be a cylindar for hull to work but logically it is a circle.
+                translate([0,0,-(capLength+l2-l1)+gap]) cylinder(d=legWidth, h=.1);
+                translate([0,0,-capLength]) cylinder(r=7 + threadGap, h=capLength);
+            }
+        } else {
+            //cap
+            translate([0, 0, -capLength]) cylinder(r = 7 + threadGap, h = capLength);
+        }
         //thread
         difference() {
             //fairly random rotation but aligns the inner and outer thread.
@@ -78,7 +82,7 @@ module leg(toPrint = false) {
             translate([0, 0, -1]) metric_thread(12 + threadGap, 1.5, (nutLength / 2) + 2, internal=true);
         }
     }
-    
+
     if (toPrint) {
         $fa = $preview ? $fa : 5;
         $fs = $preview ? $fs : 0.1;
@@ -88,10 +92,12 @@ module leg(toPrint = false) {
         translate([0, 0, nutLength + 0]) rotate([0, 180, 0]) mirror([0, 1, 0]) nutHalf();        
         translate([40, 0, capLength]) mirror([0, 1, 0]) inner();
     } else {
-        inner();
-        translate([0, 0, 0]) nutHalf();
-        translate([0, 0, nutLength + 0]) rotate([0, 180, 0]) mirror([0, 1, 0]) inner();
-        translate([0, 0, nutLength + 0]) rotate([0, 180, 0]) mirror([0, 1, 0]) nutHalf();
+        translate([0, 0, capLength]) {
+            inner(withTaper=bottomTaper);
+            nutHalf();
+            translate([0, 0, nutLength + 0]) rotate([0, 180, 0]) mirror([0, 1, 0]) inner(withTaper=false);
+            translate([0, 0, nutLength + 0]) rotate([0, 180, 0]) mirror([0, 1, 0]) nutHalf();
+        }
     }
 }
 
@@ -113,9 +119,6 @@ module hub() {
 }
 
 module legAttachment(rotate=false) {
-    l1 = 21;
-    l2 = 25;
-    width = m3ClearanceHole+4;
     a = 8; // half distance between holes.
     height = a * sqrt(3);
 
@@ -123,20 +126,20 @@ module legAttachment(rotate=false) {
         translate([0, 2 * height / 3, 0])
             union() {
                 circle(r=a-gap, center=true);
-                translate([0, (l2) / 2, 0]) square(size=[width + 2, l2], center=true);
+                translate([0, (l2) / 2, 0]) square(size=[legWidth + 2, l2], center=true);
             }
     }
 
-    module foo() {
+    translate([0, 2*height/3,0]) rotate([0,0,rotate]) translate([0, -2*height/3,0])
         difference() {
             translate([0, 0, -(legThickness-hubThickness) / 2]) linear_extrude(height = legThickness)
                 intersection() {
-                    translate([0, l2/2, 0]) square(size=[width, l2], center=true);
+                    translate([0, l2/2, 0]) square(size=[legWidth, l2], center=true);
                     centralEndMask();
                 }
             translate([0,0,-gap]) linear_extrude(height = hubThickness + gap * 2)
                 intersection() {
-                    translate([0, l1/2, 0]) square(size=[width+gap*2, l1+gap*2], center=true);
+                    translate([0, l1/2, 0]) square(size=[legWidth+gap*2, l1+gap*2], center=true);
                     translate([0,-gap,0]) centralEndMask();
                 }
             //screw head
@@ -146,31 +149,23 @@ module legAttachment(rotate=false) {
             //nut recess
             translate([0,2 * height / 3,-(legThickness-hubThickness)/2-gap]) cylinder(d=6.5, h=2.5+gap, $fn=6);
         }
-    }
-
-    if (rotate) {
-        translate([0, 2*height/3,0]) rotate([0,0,120]) translate([0, -2*height/3,0])
-        foo();
-    } else {
-        foo();
-    }
 }
-//screw head hole => cylinder(d=6, h=3.5);
-// hole 3.5
 
 //leg(toPrint = true);
 
-//hub();
-//legAttachment(rotate=true);
-//rotate([0,0,120]) legAttachment();
-
 hub();
-translate([20,0,0]) rotate([0,90,0]) legAttachment(rotate=false);
-translate([40,0,0]) rotate([0,90,0]) legAttachment();
+legAttachment(rotate=120);
+translate([0,0,hubThickness / 2]) rotate([90,0,-60]) translate([0,0,l2]) legAdjustment(bottomTaper=true);
+rotate([0,0,120]) legAttachment();
+rotate([0,0,-120]) legAttachment(rotate=-120);
+
+//hub();
+//translate([20,0,0]) rotate([0,90,0]) legAttachment(rotate=false);
+//translate([40,0,0]) rotate([0,90,0]) legAttachment();
 
 /* assembled with a cut away
 difference() {
-    leg(toPrint = false);
+    legAdjustment(toPrint = false);
     cube([10, 10, nutLength]);    
 }
 
