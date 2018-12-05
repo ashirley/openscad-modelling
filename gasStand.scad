@@ -35,18 +35,32 @@ module leg(toPrint = false) {
             rotate ([0, 0, -120]) metric_thread(12, 1.5, nutLength / 2);
             cylinder(r = 4.5, h = nutLength / 2);
         }
+
+        module groove() {
+            translate([-gap - 1, -1, nutLength / 2]) rotate([90, 90, 0])
+                linear_extrude(height = 2.5, convexity = 10, twist = 0)
+                    polygon([[nutLength,1],[nutLength,0],[4,0],[3,1]]);
+        }
+
         //alignment semi-cylinder (bottom half)
         color("red") difference() {
             cylinder(r = 4.5, h = nutLength/ 2);
             translate([-gap, -5, 0])
                 cube([5, 10, nutLength]);
+            translate([0, 0, nutLength / 2]) groove();
         }
+
         //alignment semi-cylinder (top half)
         color("blue") translate([0, 0, nutLength / 2]) difference() {
             cylinder(r = 4.5 - gap, h = nutLength / 2);
             translate([-gap, -5, 0])
                 cube([5, 10, nutLength]);
+            groove();
         }
+
+        translate([-gap, 3.5, nutLength]) rotate([90, 90, 0])
+            linear_extrude(height = 2.5, convexity = 10, twist = 0)
+                polygon([[0,0],[4,0],[3,1]]);
     }
 
     module nutHalf() {
