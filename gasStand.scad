@@ -149,7 +149,7 @@ module legAttachment(rotate=0) {
             intersection() {
                 rotate([90,0,90]) translate([0, ((hubThickness - legThickness)/2), -legWidth/2])
                     linear_extrude(height = legWidth, convexity=3)
-                        polygon([[0,0], [0,x], [l1,x],[l1,y],[0,y],[0,legThickness],[l2,legThickness],[l2,0]]);
+                        polygon([[0,0], [0,x], [l1,x],[l1,y],[0,y],[0,legThickness],[48,legThickness],[48,legThickness-5],[57,legThickness-5],[54,legThickness-2],[54,legThickness],[l2,legThickness],[l2,0]]);
                 linear_extrude(height = legThickness * 2, center=true) centralEndMask();
             }
             //screw head
