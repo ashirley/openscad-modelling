@@ -19,11 +19,11 @@ nutLength = 20;
 capLength = 2;
 
 //leg
-legThickness = 13;
-l1 = 21;
-l2 = 60;
+legTopThickness = 13; //Height of leg tops. Cannot be too small or the bolt won't fit.
+legTopHubClearance = 21; //The length (from the center) of the cutout in the leg top to clear the hub
+legTopLength = 60; //The length (from the center) to the end of the leg top.
 legWidth = m3ClearanceHole+4;
-legToAdjusterDistance = min(l2-l1, legWidth);
+legToAdjusterDistance = min(legTopLength-legTopHubClearance, legWidth);
 legAngle = 20;
 
 //hub
@@ -35,7 +35,7 @@ module legAdjustment(toPrint = false, bottomTaper = false) {
             //cap with taper
             hull() {
                 //this has to be a 3d thing for hull to work but logically it is 2d.
-                translate([0,0,-(capLength+legToAdjusterDistance)]) rotate([-legAngle,0,0]) linear_extrude(height=.1) polygon([[-legWidth/2,-legThickness/2],[legWidth/2,-legThickness/2],[legWidth/2, legThickness/2],[-legWidth/2,legThickness/2]]);
+                translate([0,0,-(capLength+legToAdjusterDistance)]) rotate([-legAngle,0,0]) linear_extrude(height=.1) polygon([[-legWidth/2,-legTopThickness/2],[legWidth/2,-legTopThickness/2],[legWidth/2, legTopThickness/2],[-legWidth/2,legTopThickness/2]]);
                 translate([0,0,-capLength]) cylinder(r=7 + threadGap, h=capLength);
             }
         } else {
@@ -120,61 +120,61 @@ module hub() {
     }
 }
 
-module legAttachment(rotate=0) {
+module legTop(rotate=0) {
     a = 8; // half distance between holes.
     height = a * sqrt(3);
     
     /*
     
-    ----    legThickness
+    ----    legTopThickness
         |
-    ----    y = (legThickness + (hubThickness + 2*gap)) / 2;
+    ----    y = (legTopThickness + (hubThickness + 2*gap)) / 2;
     |
-    ----    x = (legThickness - (hubThickness + 2*gap)) / 2;
+    ----    x = (legTopThickness - (hubThickness + 2*gap)) / 2;
         |
     ----    0
     
     */
-    x = (legThickness - (hubThickness + 2*gap)) / 2;
-    y = (legThickness + (hubThickness + 2*gap)) / 2;
+    x = (legTopThickness - (hubThickness + 2*gap)) / 2;
+    y = (legTopThickness + (hubThickness + 2*gap)) / 2;
 
     module centralEndMask() {
         translate([0, 2 * height / 3, 0])
             union() {
                 circle(r=a-gap, center=true);
-                translate([0, (l2) / 2, 0]) square(size=[legWidth + 2, l2], center=true);
+                translate([0, (legTopLength) / 2, 0]) square(size=[legWidth + 2, legTopLength], center=true);
             }
     }
 
     translate([0, 2*height/3,0]) rotate([0,0,rotate]) translate([0, -2*height/3,0])
         difference() {
             intersection() {
-                rotate([90,0,90]) translate([0, ((hubThickness - legThickness)/2), -legWidth/2])
+                rotate([90,0,90]) translate([0, ((hubThickness - legTopThickness)/2), -legWidth/2])
                     linear_extrude(height = legWidth, convexity=3)
-                        polygon([[0,0], [0,x], [l1,x],[l1,y],[0,y],[0,legThickness],[48,legThickness],[48,legThickness-5],[57,legThickness-5],[54,legThickness-2],[54,legThickness],[l2,legThickness],[l2,0]]);
-                linear_extrude(height = legThickness * 2, center=true) centralEndMask();
+                        polygon([[0,0], [0,x], [legTopHubClearance,x],[legTopHubClearance,y],[0,y],[0,legTopThickness],[48,legTopThickness],[48,legTopThickness-5],[57,legTopThickness-5],[54,legTopThickness-2],[54,legTopThickness],[legTopLength,legTopThickness],[legTopLength,0]]);
+                linear_extrude(height = legTopThickness * 2, center=true) centralEndMask();
             }
             //screw head
-            translate([0,2 * height / 3,(legThickness+hubThickness)/2-3.5]) cylinder(d=6, h=3.5+gap, $fn=16);
+            translate([0,2 * height / 3,(legTopThickness+hubThickness)/2-3.5]) cylinder(d=6, h=3.5+gap, $fn=16);
             //clearance hole
-            translate([0,2 * height / 3,-legThickness/2]) cylinder(d=m3ClearanceHole, h=legThickness, $fn=16);
+            translate([0,2 * height / 3,-legTopThickness/2]) cylinder(d=m3ClearanceHole, h=legTopThickness, $fn=16);
             //nut recess
-            translate([0,2 * height / 3,-(legThickness-hubThickness)/2-gap]) cylinder(d=6.5, h=2.5+gap, $fn=6);
+            translate([0,2 * height / 3,-(legTopThickness-hubThickness)/2-gap]) cylinder(d=6.5, h=2.5+gap, $fn=6);
         }
 }
 
 //leg(toPrint = true);
 
 hub();
-legAttachment(rotate=0); //120);
-translate([0,0,hubThickness / 2]) rotate([90,0,-60]) translate([0,0,l2]) rotate([legAngle,0,0]) translate([0,0,legToAdjusterDistance]) legAdjustment(bottomTaper=true);
-rotate([0,0,120]) legAttachment();
-rotate([0,0,-120]) legAttachment(rotate=0); //-120);
+legTop(rotate=0); //120);
+translate([0,0,hubThickness / 2]) rotate([90,0,-60]) translate([0,0,legTopLength]) rotate([legAngle,0,0]) translate([0,0,legToAdjusterDistance]) legAdjustment(bottomTaper=true);
+rotate([0,0,120]) legTop();
+rotate([0,0,-120]) legTop(rotate=0); //-120);
 //translate([0,0,3]) linear_extrude(height=4) circle(d=110); //canister
 
 //hub();
-//translate([20,0,0]) rotate([0,90,0]) legAttachment(rotate=false);
-//translate([40,0,0]) rotate([0,90,0]) legAttachment();
+//translate([20,0,0]) rotate([0,90,0]) legTop(rotate=false);
+//translate([40,0,0]) rotate([0,90,0]) legTop();
 
 /* assembled with a cut away
 difference() {
