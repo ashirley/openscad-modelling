@@ -20,20 +20,22 @@ capLength = 2;
 
 //leg
 legThickness = 13;
+l1 = 21;
+l2 = 60;
+legWidth = m3ClearanceHole+4;
+legToAdjusterDistance = min(l2-l1, legWidth);
+legAngle = 20;
 
 //hub
 hubThickness = 3;
-l1 = 21;
-l2 = 68;
-legWidth = m3ClearanceHole+4;
 
 module legAdjustment(toPrint = false, bottomTaper = false) {
     module inner() {
         if (withTaper) {
             //cap with taper
             hull() {
-                //this has to be a cylindar for hull to work but logically it is a circle.
-                translate([0,0,-(capLength+min(l2-l1, legWidth))+gap]) cylinder(d=legWidth, h=.1);
+                //this has to be a 3d thing for hull to work but logically it is 2d.
+                translate([0,0,-(capLength+legToAdjusterDistance)]) rotate([-legAngle,0,0]) linear_extrude(height=.1) polygon([[-legWidth/2,-legThickness/2],[legWidth/2,-legThickness/2],[legWidth/2, legThickness/2],[-legWidth/2,legThickness/2]]);
                 translate([0,0,-capLength]) cylinder(r=7 + threadGap, h=capLength);
             }
         } else {
@@ -164,11 +166,11 @@ module legAttachment(rotate=0) {
 //leg(toPrint = true);
 
 hub();
-legAttachment(rotate=120);
-translate([0,0,hubThickness / 2]) rotate([90,0,-60]) translate([0,0,l2]) legAdjustment(bottomTaper=true);
+legAttachment(rotate=0); //120);
+translate([0,0,hubThickness / 2]) rotate([90,0,-60]) translate([0,0,l2]) rotate([legAngle,0,0]) translate([0,0,legToAdjusterDistance]) legAdjustment(bottomTaper=true);
 rotate([0,0,120]) legAttachment();
-rotate([0,0,-120]) legAttachment(rotate=-120);
-circle(d=110);
+rotate([0,0,-120]) legAttachment(rotate=0); //-120);
+//translate([0,0,3]) linear_extrude(height=4) circle(d=110); //canister
 
 //hub();
 //translate([20,0,0]) rotate([0,90,0]) legAttachment(rotate=false);
