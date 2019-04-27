@@ -10,8 +10,8 @@ use <MCAD/fasteners/threads.scad>
 */
 
 
-gap = 0.2;
-m3ClearanceHole = 3.5;
+gap = 0.1;
+m3ClearanceHole = 3.2;
 
 //leg adjustment
 threadGap = 0.75;
@@ -140,6 +140,14 @@ module hub() {
         translate([hubSize, - hubHeight / 3, 0]) circle(d=m3ClearanceHole, $fn=16);
         translate([-hubSize, - hubHeight / 3, 0]) circle(d=m3ClearanceHole, $fn=16);
         translate([0, 2 * hubHeight / 3, 0]) circle(d=m3ClearanceHole, $fn=16);
+    }
+    //TODO: calculate these based on the hub geometry
+    retainerWidth = 2.5;
+    retainerLength = 4;
+    retainerOffset = 2.25;
+    rotate([0, 0, -150]) linear_extrude(height = (legTopThickness + hubThickness) / 2) difference() {
+        translate([retainerOffset,-(legWidth/2 + retainerWidth + gap),0]) square(size=[retainerLength,legWidth+gap*2+retainerWidth*2]);
+        translate([retainerOffset-gap,-legWidth/2 - gap,0]) square(size=[retainerLength+gap*2,legWidth+gap*2]);
     }
 }
 
@@ -291,7 +299,7 @@ module stand(toPrint=false, collapsed=false) {
     }
 }
 
-stand(toPrint=false);
+stand(toPrint=false, collapsed=false);
 /*
 difference() {
     stand(toPrint=false);
