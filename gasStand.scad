@@ -18,7 +18,7 @@ threadGap = 0.75;
 nutLength = 35;
 capLength = 2;
 adjusterThread = 12;
-connectorDepth = 2;
+connectorDepth = 3;
 
 //leg
 legTopThickness = 13; //Height of leg tops. Cannot be too small or the bolt won't fit.
@@ -26,8 +26,8 @@ legTopHubClearance = 24; //The length (from the center) of the cutout in the leg
 legTopLength = 60; //The length (from the center) to the end of the leg top.
 legWidth = m3ClearanceHole+4;
 legToAdjusterDistance = min(legTopLength-legTopHubClearance, legWidth);
-legAngle = 20;
-bottleRadius = 54;
+legAngle = 30;
+bottleRadius = 55;
 
 legBottomLength = 60; //The length (from the joint) to the end of the leg bottom.
 footLength=14;
@@ -41,10 +41,17 @@ module legAdjustment(toPrint = false, bottomTaper = false) {
     module inner(withTaper = false) {
         if (withTaper) {
             //cap with taper
-            hull() {
-                //this has to be 3d thing for hull to work but logically it is 2d.
-                translate([0,0,-(capLength+legToAdjusterDistance)]) rotate([-legAngle,0,0]) linear_extrude(height=.1) polygon([[-legWidth/2,-legTopThickness/2],[legWidth/2,-legTopThickness/2],[legWidth/2, legTopThickness/2],[-legWidth/2,legTopThickness/2]]);
-                translate([0,0,-capLength]) cylinder(r=7 + threadGap, h=capLength);
+            difference() {
+                hull() {
+                    //this has to be 3d thing for hull to work but logically it is 2d.
+                    translate([0,0,-(capLength+legToAdjusterDistance)]) rotate([-legAngle,0,0]) linear_extrude(height=.1) polygon([[-legWidth/2,-legTopThickness/2],[legWidth/2,-legTopThickness/2],[legWidth/2, legTopThickness/2],[-legWidth/2,legTopThickness/2]]);
+                    translate([0,0,-capLength]) cylinder(r=7 + threadGap, h=capLength);
+                }
+                translate([0, 0, -(capLength+legToAdjusterDistance)]) rotate([-legAngle,0,0]) minkowski() {
+                    legTopBottomConnector();
+                    //sphere(d=gap);
+                    translate([-gap, -gap, -gap]) cube(size=gap*2);
+                }
             }
         } else {
             //cap
@@ -98,13 +105,7 @@ module legAdjustment(toPrint = false, bottomTaper = false) {
         $fs = $preview ? $fs : 0.1;
 
         if (bottomTaper) {
-            difference() {
-                rotate([legAngle,0,0]) translate([20, 0, capLength+legToAdjusterDistance]) inner(withTaper=true);
-                translate([20,0,0]) minkowski() {
-                    legTopBottomConnector();
-                    sphere(d=gap);
-                }
-            }
+            rotate([legAngle,0,0]) translate([20, 0, capLength+legToAdjusterDistance]) inner(withTaper=true);
         } else {
             translate([20, 0, capLength]) translate([0, 0, capLength]) inner(withTaper=false);
         }
@@ -112,13 +113,14 @@ module legAdjustment(toPrint = false, bottomTaper = false) {
         translate([0, 0, nutLength + 0]) rotate([0, 180, 0]) mirror([0, 1, 0]) nutHalf();
         translate([40, 0, 0]) mirror([0, 1, 0]) difference() {
             translate([0, 0, capLength]) inner();
-            translate([0,0,-gap]) minkowski() {
+            rotate([0, 0, 90]) translate([0,0,-gap]) minkowski() {
                 legBottomProfile(height=connectorDepth);
                 sphere(d=gap);
             }
         }
     } else {
         translate([0, 0, capLength]) {
+
             inner(withTaper=bottomTaper);
             nutHalf();
             translate([0, 0, nutLength + 0]) rotate([0, 180, 0]) mirror([0, 1, 0]) inner(withTaper=false);
@@ -204,13 +206,14 @@ module legBottom(rotate=0, topGap=0, length=legBottomLength, withTaper=true, toP
             difference() {
                 hull() {
                     //this has to be a 3d thing for hull to work but logically it is 2d.
-                    translate([0,legTopLength+0.1,0]) rotate([90,0,0]) linear_extrude(height=.1)
+                    translate([0,legTopLength+0.1,0]) rotate([90,0,0]) linear_extrude(convexity=10, height=.1)
                         polygon([[-legWidth/2, 0],[-legWidth/2,-legTopThickness/2],[0,-legTopThickness/2],[legWidth/2,-legTopThickness/2],[legWidth/2, 0],[legWidth/2, legTopThickness/2],[0,legTopThickness/2],[-legWidth/2,legTopThickness/2]]);
                     profile(topGap=topGap);
                 }
-                translate([0,legTopLength-gap,0]) rotate([-90, 0, 0]) minkowski() {
+                translate([0,legTopLength,0]) rotate([-90, 0, 0]) minkowski() {
                     legTopBottomConnector();
-                    sphere(d=gap);
+                    translate([-gap, -gap, -gap]) cube(size=gap*2);
+                    //sphere(d=gap, center=true);
                 }
             }
         }
@@ -241,7 +244,7 @@ module legBottom(rotate=0, topGap=0, length=legBottomLength, withTaper=true, toP
 
 //The connecting piece to align the top and bottom leg when glueing them together.
 module legTopBottomConnector() {
-    linear_extrude(height=connectorDepth, scale=0.1) union() {
+    linear_extrude(height=connectorDepth, convexity=10, scale=0.1) union() {
         square(size=[legWidth-2,2], center=true);
         square(size=[2,legTopThickness-2], center=true);
     }
@@ -288,4 +291,11 @@ module stand(toPrint=false, collapsed=false) {
     }
 }
 
-stand(toPrint=true);
+stand(toPrint=false);
+/*
+difference() {
+    stand(toPrint=false);
+    //rotate([0,0,120])
+    translate([0,31,-50]) cube([100,100,100]);
+}
+*/
